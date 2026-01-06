@@ -1,155 +1,224 @@
-export default function DeviceStatus() {
-  // 샘플 데이터 (실제로는 Supabase에서 가져옴)
-  const devices = [
-    {
-      id: "1",
-      name: "만파식 리더기 #1",
-      serial: "MPS-2026-A001",
-      status: "online" as const,
-      firmware: "v2.1.0",
-      battery: 85,
-      lastSync: "방금 전",
-      cartridge: {
-        type: "혈당",
-        remaining: 42,
-        total: 50,
-      },
-    },
-    {
-      id: "2",
-      name: "만파식 리더기 #2",
-      serial: "MPS-2026-A002",
-      status: "offline" as const,
-      firmware: "v2.0.5",
-      battery: 23,
-      lastSync: "3일 전",
-      cartridge: {
-        type: "콜레스테롤",
-        remaining: 8,
-        total: 50,
-      },
-    },
-  ];
+"use client";
 
-  const statusConfig = {
-    online: { label: "온라인", color: "text-green-400", bg: "bg-green-500" },
-    offline: { label: "오프라인", color: "text-gray-400", bg: "bg-gray-500" },
-    error: { label: "오류", color: "text-red-400", bg: "bg-red-500" },
+import { cn } from "@/lib/utils";
+import {
+  Wifi,
+  WifiOff,
+  Battery,
+  BatteryLow,
+  BatteryMedium,
+  BatteryFull,
+  BatteryCharging,
+  RefreshCw,
+  Settings,
+  Cpu,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
+
+interface Device {
+  id: string;
+  name: string;
+  serial: string;
+  status: "online" | "offline" | "syncing";
+  battery: number;
+  isCharging?: boolean;
+  firmware: string;
+  lastSync: string;
+  signalStrength?: number; // 0-100
+}
+
+interface DeviceStatusProps {
+  className?: string;
+}
+
+// 배터리 아이콘 선택
+const getBatteryIcon = (level: number, isCharging?: boolean) => {
+  if (isCharging) return BatteryCharging;
+  if (level <= 20) return BatteryLow;
+  if (level <= 50) return BatteryMedium;
+  return BatteryFull;
+};
+
+// 배터리 색상
+const getBatteryColor = (level: number) => {
+  if (level <= 20) return "text-red-400";
+  if (level <= 50) return "text-yellow-400";
+  return "text-green-400";
+};
+
+export default function DeviceStatus({ className }: DeviceStatusProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // 샘플 데이터
+  const device: Device = {
+    id: "1",
+    name: "MPK-Reader-Alpha",
+    serial: "MPS-2026-A001",
+    status: "online",
+    battery: 85,
+    isCharging: false,
+    firmware: "v2.1.0",
+    lastSync: "방금 전",
+    signalStrength: 92,
   };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 2000);
+  };
+
+  const statusConfig = {
+    online: {
+      label: "온라인",
+      color: "text-green-400",
+      bg: "bg-green-500",
+      icon: Wifi,
+    },
+    offline: {
+      label: "오프라인",
+      color: "text-gray-400",
+      bg: "bg-gray-500",
+      icon: WifiOff,
+    },
+    syncing: {
+      label: "동기화 중",
+      color: "text-blue-400",
+      bg: "bg-blue-500",
+      icon: RefreshCw,
+    },
+  };
+
+  const status = statusConfig[device.status];
+  const BatteryIcon = getBatteryIcon(device.battery, device.isCharging);
+  const StatusIcon = status.icon;
+
   return (
-    <div className="glass rounded-2xl p-6">
+    <div
+      className={cn(
+        "p-6 rounded-2xl",
+        "bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)]",
+        className
+      )}
+    >
+      {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white">연결된 리더기</h2>
-          <p className="text-gray-400 text-sm">{devices.length}개의 기기 등록됨</p>
+          <h3 className="text-lg font-bold text-white">연결된 기기</h3>
+          <p className="text-sm text-gray-400">만파식 리더기 상태</p>
         </div>
-        <button className="px-4 py-2 rounded-xl bg-manpasik-primary/20 text-manpasik-primary hover:bg-manpasik-primary/30 transition-colors text-sm font-medium">
-          + 기기 추가
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+        >
+          <RefreshCw className={cn("w-5 h-5", isRefreshing && "animate-spin")} />
         </button>
       </div>
 
-      {/* Device List */}
-      <div className="space-y-4">
-        {devices.map((device) => {
-          const status = statusConfig[device.status];
-          const cartridgePercent = (device.cartridge.remaining / device.cartridge.total) * 100;
-          const isLowCartridge = cartridgePercent < 20;
-          const isLowBattery = device.battery < 30;
-
-          return (
-            <div
-              key={device.id}
-              className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 border border-transparent hover:border-white/10"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-manpasik-gradient flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">{device.name}</p>
-                    <p className="text-sm text-gray-400">{device.serial}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${status.bg} ${device.status === "online" ? "animate-pulse" : ""}`}></span>
-                  <span className={`text-sm font-medium ${status.color}`}>{status.label}</span>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-3">
-                {/* Battery */}
-                <div className="p-3 rounded-lg bg-white/5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400">배터리</span>
-                    {isLowBattery && (
-                      <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    )}
-                  </div>
-                  <p className={`text-lg font-bold ${isLowBattery ? "text-amber-400" : "text-white"}`}>
-                    {device.battery}%
-                  </p>
-                </div>
-
-                {/* Cartridge */}
-                <div className="p-3 rounded-lg bg-white/5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400">카트리지</span>
-                    {isLowCartridge && (
-                      <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    )}
-                  </div>
-                  <p className={`text-lg font-bold ${isLowCartridge ? "text-red-400" : "text-white"}`}>
-                    {device.cartridge.remaining}/{device.cartridge.total}
-                  </p>
-                  <p className="text-xs text-gray-400">{device.cartridge.type}</p>
-                </div>
-
-                {/* Last Sync */}
-                <div className="p-3 rounded-lg bg-white/5">
-                  <span className="text-xs text-gray-400 block mb-2">마지막 동기화</span>
-                  <p className="text-lg font-bold text-white">{device.lastSync}</p>
-                  <p className="text-xs text-gray-400">{device.firmware}</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
-                <button className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                  동기화
-                </button>
-                <button className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                  설정
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Empty State (hidden when devices exist) */}
-      {devices.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+      {/* 기기 이미지 & 상태 */}
+      <div className="relative mb-6">
+        {/* 기기 일러스트 */}
+        <div className="relative w-full h-40 rounded-2xl bg-gradient-to-br from-[var(--manpasik-primary)]/20 to-[var(--manpasik-secondary)]/20 border border-white/10 flex items-center justify-center overflow-hidden">
+          {/* 배경 그리드 패턴 */}
+          <div className="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%">
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
           </div>
-          <p className="text-gray-400 mb-4">연결된 기기가 없습니다</p>
-          <button className="px-6 py-2 rounded-xl bg-manpasik-gradient text-white font-medium hover:shadow-lg hover:shadow-manpasik-primary/30 transition-all">
-            첫 번째 기기 연결하기
-          </button>
+
+          {/* 기기 아이콘 */}
+          <div className="relative">
+            <div className="w-24 h-24 rounded-2xl bg-manpasik-gradient flex items-center justify-center shadow-2xl shadow-[var(--manpasik-primary)]/40">
+              <Cpu className="w-12 h-12 text-white" />
+            </div>
+            {/* 연결 상태 인디케이터 */}
+            <div
+              className={cn(
+                "absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center",
+                device.status === "online" ? "bg-green-500" : "bg-gray-500",
+                device.status === "online" && "animate-pulse"
+              )}
+            >
+              <StatusIcon className="w-3 h-3 text-white" />
+            </div>
+          </div>
+
+          {/* 신호 강도 표시 */}
+          {device.signalStrength && device.status === "online" && (
+            <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/30 text-xs text-white">
+              <Wifi className="w-3 h-3" />
+              {device.signalStrength}%
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* 기기 정보 */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-bold text-white">{device.name}</h4>
+          <div
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
+              status.color,
+              `${status.bg}/20`
+            )}
+          >
+            <span className={cn("w-1.5 h-1.5 rounded-full", status.bg, device.status === "online" && "animate-pulse")} />
+            {status.label}
+          </div>
+        </div>
+        <p className="text-sm text-gray-400">{device.serial}</p>
+      </div>
+
+      {/* 상태 그리드 */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {/* 배터리 */}
+        <div className="p-3 rounded-xl bg-white/5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400">배터리</span>
+            <BatteryIcon className={cn("w-4 h-4", getBatteryColor(device.battery))} />
+          </div>
+          <p className={cn("text-xl font-bold", getBatteryColor(device.battery))}>
+            {device.battery}%
+          </p>
+          {device.isCharging && (
+            <div className="flex items-center gap-1 text-xs text-green-400 mt-1">
+              <Zap className="w-3 h-3" />
+              충전 중
+            </div>
+          )}
+        </div>
+
+        {/* 펌웨어 */}
+        <div className="p-3 rounded-xl bg-white/5">
+          <span className="text-xs text-gray-400 block mb-2">펌웨어</span>
+          <p className="text-lg font-bold text-white">{device.firmware}</p>
+          <p className="text-xs text-green-400 mt-1">최신</p>
+        </div>
+
+        {/* 마지막 동기화 */}
+        <div className="p-3 rounded-xl bg-white/5">
+          <span className="text-xs text-gray-400 block mb-2">동기화</span>
+          <p className="text-lg font-bold text-white">{device.lastSync}</p>
+        </div>
+      </div>
+
+      {/* 액션 버튼들 */}
+      <div className="flex gap-2">
+        <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--manpasik-primary)]/20 text-[var(--manpasik-primary)] hover:bg-[var(--manpasik-primary)]/30 transition-colors text-sm font-medium">
+          <RefreshCw className="w-4 h-4" />
+          동기화
+        </button>
+        <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium">
+          <Settings className="w-4 h-4" />
+          설정
+        </button>
+      </div>
     </div>
   );
 }

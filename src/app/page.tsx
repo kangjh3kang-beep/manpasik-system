@@ -13,7 +13,8 @@ export default function LandingPage() {
             </svg>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold bg-manpasik-gradient bg-clip-text text-transparent mb-4">
-            萬波息
+            만파식
+            <span className="text-2xl md:text-3xl ml-2 opacity-70">(MPS)</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-300">
             Manpasik Healthcare Platform

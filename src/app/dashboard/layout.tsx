@@ -2,56 +2,28 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import {
+  Home,
+  Activity,
+  Cpu,
+  Users,
+  Settings,
+  Bell,
+  Menu,
+  X,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 
 const navItems = [
-  {
-    name: "홈",
-    href: "/dashboard",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-  },
-  {
-    name: "측정",
-    href: "/dashboard/measurements",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    name: "기기관리",
-    href: "/dashboard/devices",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-      </svg>
-    ),
-  },
-  {
-    name: "커뮤니티",
-    href: "/dashboard/community",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ),
-  },
-  {
-    name: "설정",
-    href: "/dashboard/settings",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
+  { name: "홈", href: "/dashboard", icon: Home },
+  { name: "측정하기", href: "/dashboard/measure", icon: Activity },
+  { name: "기기 관리", href: "/dashboard/devices", icon: Cpu },
+  { name: "커뮤니티", href: "/dashboard/community", icon: Users },
+  { name: "설정", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function DashboardLayout({
@@ -62,15 +34,30 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Supabase가 설정되지 않은 경우 데모 모드로 실행
+      if (!isSupabaseConfigured) {
+        setUserEmail("demo@manpasik.com");
+        setUserName("데모 사용자");
+        setIsLoading(false);
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/auth");
       } else {
         setUserEmail(session.user.email || null);
+        setUserName(session.user.user_metadata?.name || session.user.email?.split("@")[0] || null);
       }
+      setIsLoading(false);
     };
     checkAuth();
   }, [router]);
@@ -80,17 +67,43 @@ export default function DashboardLayout({
     router.push("/");
   };
 
+  // 사이드바 외부 클릭 시 닫기
+  const closeSidebar = () => setIsSidebarOpen(false);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-[var(--manpasik-primary)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <aside className="w-64 glass border-r border-white/10 flex flex-col">
-        {/* Logo */}
+      {/* 모바일 오버레이 */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
+      {/* 사이드바 */}
+      <aside
+        className={cn(
+          "fixed lg:static inset-y-0 left-0 z-50",
+          "w-72 lg:w-64 flex flex-col",
+          "bg-[var(--manpasik-deep-ocean)]/95 backdrop-blur-xl",
+          "border-r border-white/10",
+          "transform transition-transform duration-300 ease-out",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* 로고 */}
         <div className="p-6 border-b border-white/10">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-manpasik-gradient flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
+          <Link href="/dashboard" className="flex items-center gap-3" onClick={closeSidebar}>
+            <div className="w-10 h-10 rounded-xl bg-manpasik-gradient flex items-center justify-center shadow-lg shadow-[var(--manpasik-primary)]/30">
+              <Cpu className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-manpasik-gradient bg-clip-text text-transparent">
               만파식
@@ -98,23 +111,31 @@ export default function DashboardLayout({
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+        {/* 네비게이션 */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-1">
             {navItems.map((item) => {
+              const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    onClick={closeSidebar}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                      "group relative overflow-hidden",
                       isActive
-                        ? "bg-manpasik-primary/20 text-manpasik-primary border border-manpasik-primary/30"
+                        ? "bg-[var(--manpasik-primary)]/20 text-[var(--manpasik-primary)]"
                         : "text-gray-400 hover:text-white hover:bg-white/5"
-                    }`}
+                    )}
                   >
-                    {item.icon}
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[var(--manpasik-primary)] rounded-r-full" />
+                    )}
+                    <Icon className={cn("w-5 h-5", isActive && "text-[var(--manpasik-primary)]")} />
                     <span className="font-medium">{item.name}</span>
+                    {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
                   </Link>
                 </li>
               );
@@ -122,37 +143,99 @@ export default function DashboardLayout({
           </ul>
         </nav>
 
-        {/* User Section */}
+        {/* 유저 섹션 */}
         <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-manpasik-primary to-manpasik-secondary flex items-center justify-center">
-              <span className="text-white font-bold">
-                {userEmail?.charAt(0).toUpperCase() || "?"}
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-white/5">
+            <div className="w-10 h-10 rounded-full bg-manpasik-gradient flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-sm">
+                {userName?.charAt(0).toUpperCase() || userEmail?.charAt(0).toUpperCase() || "?"}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {userEmail || "로딩 중..."}
+                {userName || "사용자"}
               </p>
-              <p className="text-xs text-gray-400">사용자</p>
+              <p className="text-xs text-gray-400 truncate">{userEmail}</p>
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <LogOut className="w-5 h-5" />
             <span>로그아웃</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      {/* 메인 콘텐츠 영역 */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* 헤더 */}
+        <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-4 lg:px-8 bg-[var(--manpasik-deep-ocean)]/80 backdrop-blur-xl border-b border-white/10">
+          {/* 모바일 메뉴 버튼 */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* 페이지 타이틀 (모바일) */}
+          <div className="lg:hidden">
+            <span className="text-lg font-bold bg-manpasik-gradient bg-clip-text text-transparent">
+              만파식
+            </span>
+          </div>
+
+          {/* 검색바 (데스크탑) */}
+          <div className="hidden lg:flex flex-1 max-w-md">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="검색..."
+                className="w-full px-4 py-2 pl-10 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--manpasik-primary)] transition-colors"
+              />
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* 우측 아이콘들 */}
+          <div className="flex items-center gap-2">
+            {/* 알림 */}
+            <button className="relative p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            </button>
+
+            {/* 프로필 (데스크탑) */}
+            <div className="hidden lg:flex items-center gap-3 ml-4 pl-4 border-l border-white/10">
+              <div className="w-8 h-8 rounded-full bg-manpasik-gradient flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {userName?.charAt(0).toUpperCase() || "?"}
+                </span>
+              </div>
+              <span className="text-sm font-medium text-white">
+                {userName || "사용자"}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* 메인 콘텐츠 */}
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }

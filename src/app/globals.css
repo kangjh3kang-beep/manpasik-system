@@ -3,17 +3,41 @@
 @tailwind utilities;
 
 :root {
+  /* 만파식 코어 컬러 시스템 */
+  --manpasik-deep-ocean: #0F172A;
+  --manpasik-deep-ocean-rgb: 15, 23, 42;
+  --manpasik-darker: #020617;
+  --manpasik-darker-rgb: 2, 6, 23;
+  
+  --manpasik-bio-green: #10B981;
+  --manpasik-bio-green-rgb: 16, 185, 129;
+  
+  --manpasik-primary: #0ea5e9;
+  --manpasik-primary-rgb: 14, 165, 233;
+  
+  --manpasik-secondary: #8b5cf6;
+  --manpasik-secondary-rgb: 139, 92, 246;
+  
+  /* 텍스트 컬러 */
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 2, 6, 23;
+  --text-muted: 156, 163, 175;
+  
+  /* Glass 효과 */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.1);
 }
 
 body {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", sans-serif;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
     to bottom,
-    rgb(var(--background-start-rgb)),
-    rgb(var(--background-end-rgb))
+    var(--manpasik-deep-ocean),
+    var(--manpasik-darker)
   );
   min-height: 100vh;
 }
@@ -32,6 +56,83 @@ body {
   .glass-hover:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* 움직이는 그라데이션 배경 */
+.animated-gradient-bg {
+  background: linear-gradient(
+    -45deg,
+    var(--manpasik-deep-ocean),
+    #1e1b4b,
+    #0c4a6e,
+    var(--manpasik-darker)
+  );
+  background-size: 400% 400%;
+  animation: gradient-flow 15s ease infinite;
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 부유하는 오브 효과 */
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float 20s ease-in-out infinite;
+}
+
+.floating-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--manpasik-primary);
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.floating-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--manpasik-secondary);
+  bottom: -10%;
+  right: -10%;
+  animation-delay: -5s;
+}
+
+.floating-orb-3 {
+  width: 300px;
+  height: 300px;
+  background: var(--manpasik-bio-green);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(20px, 10px) scale(1.05);
   }
 }
 
