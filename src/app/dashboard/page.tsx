@@ -3,6 +3,9 @@
 import HealthScoreRing from "@/components/dashboard/HealthScoreRing";
 import DeviceStatus from "@/components/dashboard/DeviceStatus";
 import LiveChart from "@/components/dashboard/LiveChart";
+import EnvironmentStatus from "@/components/dashboard/EnvironmentStatus";
+import AIInsightCard from "@/components/dashboard/AIInsightCard";
+import EmergencyButton from "@/components/dashboard/EmergencyButton";
 import { cn } from "@/lib/utils";
 import {
   Calendar,
@@ -11,7 +14,12 @@ import {
   FileText,
   Plus,
   Bell,
+  Activity,
+  Brain,
+  ShoppingBag,
+  Video,
 } from "lucide-react";
+import Link from "next/link";
 
 // 빠른 액션 정의
 const quickActions = [
@@ -22,61 +30,68 @@ const quickActions = [
     color: "var(--manpasik-primary)",
     bgColor: "bg-[var(--manpasik-primary)]/20",
     hoverBorder: "hover:border-[var(--manpasik-primary)]/50",
+    href: "/dashboard/measure",
   },
   {
-    title: "리포트 보기",
-    description: "상세 건강 분석",
-    icon: FileText,
+    title: "AI 코치 상담",
+    description: "건강 상담 받기",
+    icon: Brain,
     color: "var(--manpasik-secondary)",
     bgColor: "bg-[var(--manpasik-secondary)]/20",
     hoverBorder: "hover:border-[var(--manpasik-secondary)]/50",
+    href: "/dashboard/ai-coach",
   },
   {
-    title: "기기 연결",
-    description: "새 리더기 등록",
-    icon: Zap,
+    title: "카트리지 구매",
+    description: "마켓플레이스 이동",
+    icon: ShoppingBag,
     color: "var(--manpasik-bio-green)",
     bgColor: "bg-[var(--manpasik-bio-green)]/20",
     hoverBorder: "hover:border-[var(--manpasik-bio-green)]/50",
+    href: "/dashboard/marketplace",
   },
   {
-    title: "알림 설정",
-    description: "맞춤 알림 관리",
-    icon: Bell,
+    title: "화상 진료",
+    description: "전문의 상담 예약",
+    icon: Video,
     color: "#eab308",
     bgColor: "bg-yellow-500/20",
     hoverBorder: "hover:border-yellow-500/50",
+    href: "/dashboard/telemedicine",
   },
 ];
 
-// 최근 활동 더미 데이터
-const recentActivities = [
+// 최근 측정 더미 데이터
+const recentMeasurements = [
   {
     id: 1,
-    type: "measurement",
-    title: "혈당 측정 완료",
-    value: "98 mg/dL",
+    type: "혈당",
+    value: "98",
+    unit: "mg/dL",
     status: "정상",
     time: "10분 전",
     statusColor: "text-green-400",
+    icon: "🩸",
   },
   {
     id: 2,
-    type: "sync",
-    title: "기기 동기화",
-    value: "MPK-Reader-Alpha",
-    status: "성공",
-    time: "1시간 전",
+    type: "콜레스테롤",
+    value: "185",
+    unit: "mg/dL",
+    status: "양호",
+    time: "어제",
     statusColor: "text-green-400",
+    icon: "🫀",
   },
   {
     id: 3,
-    type: "alert",
-    title: "콜레스테롤 주의",
-    value: "205 mg/dL",
-    status: "주의",
-    time: "어제",
-    statusColor: "text-yellow-400",
+    type: "케톤",
+    value: "0.5",
+    unit: "mmol/L",
+    status: "정상",
+    time: "2일 전",
+    statusColor: "text-green-400",
+    icon: "⚡",
   },
 ];
 
@@ -108,54 +123,71 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 메인 그리드 - PC 3단, 모바일 1단 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* 건강 점수 링 */}
+      {/* 메인 그리드 - 4열 레이아웃 */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        {/* 건강 점수 링 - 1열 */}
         <HealthScoreRing score={87} previousScore={82} />
 
-        {/* 기기 상태 */}
-        <DeviceStatus />
-
-        {/* 최근 활동 */}
+        {/* 최근 측정 결과 - 1열 */}
         <div
           className={cn(
             "p-6 rounded-2xl",
             "bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)]"
           )}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-white">최근 활동</h3>
-              <p className="text-sm text-gray-400">최근 기록 요약</p>
-            </div>
-            <button className="text-sm text-[var(--manpasik-primary)] hover:underline flex items-center gap-1">
-              전체 보기
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-white">최근 측정</h3>
+            <Link
+              href="/dashboard/analysis"
+              className="text-sm text-[var(--manpasik-primary)] hover:underline flex items-center gap-1"
+            >
+              전체 <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
-          <div className="space-y-4">
-            {recentActivities.map((activity) => (
+          <div className="space-y-3">
+            {recentMeasurements.map((m) => (
               <div
-                key={activity.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                key={m.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {activity.title}
-                  </p>
-                  <p className="text-xs text-gray-400">{activity.time}</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{m.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-white">{m.type}</p>
+                    <p className="text-xs text-gray-500">{m.time}</p>
+                  </div>
                 </div>
-                <div className="text-right ml-4">
-                  <p className="text-sm font-bold text-white">{activity.value}</p>
-                  <p className={cn("text-xs", activity.statusColor)}>
-                    {activity.status}
+                <div className="text-right">
+                  <p className="text-lg font-bold text-white">
+                    {m.value}
+                    <span className="text-xs text-gray-400 ml-1">{m.unit}</span>
                   </p>
+                  <p className={cn("text-xs", m.statusColor)}>{m.status}</p>
                 </div>
               </div>
             ))}
           </div>
+
+          <Link
+            href="/dashboard/measure"
+            className="mt-4 w-full py-2.5 rounded-xl bg-manpasik-gradient text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Activity className="w-4 h-4" />
+            새 측정 시작
+          </Link>
         </div>
+
+        {/* AI 인사이트 - 2열 */}
+        <div className="lg:col-span-2">
+          <AIInsightCard />
+        </div>
+      </div>
+
+      {/* 환경 상태 + 기기 상태 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <EnvironmentStatus />
+        <DeviceStatus />
       </div>
 
       {/* 라이브 차트 - 전체 너비 */}
@@ -163,36 +195,46 @@ export default function DashboardPage() {
         <LiveChart />
       </div>
 
-      {/* 빠른 작업 */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">빠른 작업</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.title}
-                className={cn(
-                  "p-4 rounded-xl text-left transition-all duration-200 group",
-                  "bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)]",
-                  action.hoverBorder
-                )}
-              >
-                <div
+      {/* 빠른 작업 + 긴급 버튼 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* 빠른 작업 - 2열 */}
+        <div className="lg:col-span-2">
+          <h2 className="text-xl font-bold text-white mb-4">빠른 작업</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.title}
+                  href={action.href}
                   className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors",
-                    action.bgColor
+                    "p-4 rounded-xl text-left transition-all duration-200 group",
+                    "bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)]",
+                    action.hoverBorder
                   )}
                 >
-                  <Icon className="w-5 h-5" style={{ color: action.color }} />
-                </div>
-                <p className="font-medium text-white group-hover:text-white">
-                  {action.title}
-                </p>
-                <p className="text-sm text-gray-400">{action.description}</p>
-              </button>
-            );
-          })}
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors",
+                      action.bgColor
+                    )}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: action.color }} />
+                  </div>
+                  <p className="font-medium text-white group-hover:text-white text-sm">
+                    {action.title}
+                  </p>
+                  <p className="text-xs text-gray-400">{action.description}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 긴급 버튼 - 1열 */}
+        <div>
+          <h2 className="text-xl font-bold text-white mb-4">긴급 상황</h2>
+          <EmergencyButton />
         </div>
       </div>
 
@@ -232,6 +274,18 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300">환경 측정</span>
+                <span className="text-white font-medium">3/7일</span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[var(--manpasik-secondary)] rounded-full transition-all"
+                  style={{ width: "43%" }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -243,14 +297,22 @@ export default function DashboardPage() {
           )}
         >
           <h3 className="text-lg font-bold text-white mb-4">💡 오늘의 건강 팁</h3>
-          <p className="text-gray-300 leading-relaxed">
-            식후 혈당 관리를 위해 식사 후 <span className="text-[var(--manpasik-primary)] font-medium">15분간 가벼운 산책</span>을 권장합니다. 
-            이는 혈당 스파이크를 약 25% 감소시키는 데 도움이 됩니다.
+          <p className="text-gray-300 leading-relaxed mb-4">
+            식후 혈당 관리를 위해 식사 후{" "}
+            <span className="text-[var(--manpasik-primary)] font-medium">
+              15분간 가벼운 산책
+            </span>
+            을 권장합니다. 이는 혈당 스파이크를 약 25% 감소시키는 데 도움이 됩니다.
           </p>
-          <button className="mt-4 text-sm text-[var(--manpasik-primary)] hover:underline flex items-center gap-1">
-            더 많은 팁 보기
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex gap-3">
+            <Link
+              href="/dashboard/ai-coach"
+              className="text-sm text-[var(--manpasik-primary)] hover:underline flex items-center gap-1"
+            >
+              AI 코치에게 더 물어보기
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -16,11 +16,20 @@ import {
   X,
   LogOut,
   ChevronRight,
+  Brain,
+  ShoppingBag,
+  Video,
+  BarChart3,
 } from "lucide-react";
+import PWARegister from "@/components/PWARegister";
 
 const navItems = [
   { name: "홈", href: "/dashboard", icon: Home },
   { name: "측정하기", href: "/dashboard/measure", icon: Activity },
+  { name: "AI 코치", href: "/dashboard/ai-coach", icon: Brain },
+  { name: "데이터 분석", href: "/dashboard/analysis", icon: BarChart3 },
+  { name: "마켓플레이스", href: "/dashboard/marketplace", icon: ShoppingBag },
+  { name: "화상진료", href: "/dashboard/telemedicine", icon: Video },
   { name: "기기 관리", href: "/dashboard/devices", icon: Cpu },
   { name: "커뮤니티", href: "/dashboard/community", icon: Users },
   { name: "설정", href: "/dashboard/settings", icon: Settings },
@@ -236,6 +245,9 @@ export default function DashboardLayout({
         {/* 메인 콘텐츠 */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+
+      {/* PWA 설치 프롬프트 */}
+      <PWARegister />
     </div>
   );
 }
