@@ -1,0 +1,85 @@
+name: manpasik_mobile
+description: 만파식(MPS) 건강 모니터링 모바일 앱
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+    
+  # State Management & DI
+  flutter_bloc: ^8.1.3
+  hydrated_bloc: ^9.1.2
+  get_it: ^7.6.4
+  injectable: ^2.3.2
+  equatable: ^2.0.5
+
+  # Network
+  dio: ^5.4.0
+  retrofit: 4.0.1  # 4.1.0 -> 4.0.1 (다운그레이드)
+  json_annotation: ^4.8.1
+  freezed_annotation: ^2.4.1
+  pretty_dio_logger: ^1.3.1
+
+  # Local DB
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Hardware
+  flutter_blue_plus: ^1.28.8
+  nfc_manager: ^3.3.0
+  permission_handler: ^11.1.0
+
+  # UI
+  go_router: ^12.1.1
+  flutter_svg: ^2.0.9
+  fl_chart: ^0.65.0
+  cupertino_icons: ^1.0.6
+  flutter_screenutil: ^5.9.0
+  google_fonts: ^6.1.0
+  
+  # Utils
+  uuid: ^4.2.1
+  intl: ^0.18.1
+  rxdart: ^0.27.7
+  dartz: ^0.10.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  
+  # Code Generation (호환성 맞춘 버전 세트)
+  build_runner: ^2.4.8
+  retrofit_generator: 7.0.8  # 8.x -> 7.0.8 (다운그레이드)
+  injectable_generator: ^2.4.1
+  hive_generator: ^2.0.1
+  json_serializable: ^6.7.1
+  freezed: ^2.4.7
+  
+  # Testing
+  mockito: ^5.4.4
+  mocktail: ^1.0.2
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+  
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700

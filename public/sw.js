@@ -135,3 +135,12 @@ async function syncMeasurements() {
 console.log('[SW] 만파식 Service Worker 로드됨');
 
 
+
+
+
+
+
+
+
+
+
